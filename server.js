@@ -113,10 +113,40 @@ app.get('/addexpertarea', function (req, resp) {
 });
 
 
+app.post('/adddealer', function (req, resp) {
+
+    value1 = {fname: req.body.fname,lname: req.body.fname, phone: req.body.phone,zip: req.body.zip};
+
+    var collection = db.collection('dealers');
+
+    collection.insert([value1], function (err, result) {
+        if (err) {
+            resp.send(err);
+        } else {
+            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+        }
+    });
+
+});
+
+
 app.get('/listexpert', function (req, resp) {
 
 
     var collection = db.collection('addexpertarea');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+    });
+
+});
+
+app.get('/listdealers', function (req, resp) {
+
+
+    var collection = db.collection('dealers');
 
     collection.find().toArray(function(err, items) {
 
