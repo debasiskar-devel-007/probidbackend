@@ -115,7 +115,14 @@ app.get('/addexpertarea', function (req, resp) {
 
 app.post('/adddealer', function (req, resp) {
 
-    value1 = {fname: req.body.fname,lname: req.body.fname, phone: req.body.phone,zip: req.body.zip};
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+
+    value1 = {fname: req.body.fname,lname: req.body.fname, phone: req.body.phone,zip: req.body.zip,username:req.body.username,password:hash};
 
     var collection = db.collection('dealers');
 
