@@ -122,7 +122,7 @@ app.post('/adddealer', function (req, resp) {
         .update('password')
         .digest('hex');
 
-    value1 = {fname: req.body.fname,lname: req.body.fname, phone: req.body.phone,zip: req.body.zip,username:req.body.username,password:hash};
+    value1 = {fname: req.body.fname,lname: req.body.fname, phone: req.body.phone,zip: req.body.zip,username:req.body.username,password:hash,is_lead:1};
 
     var collection = db.collection('dealers');
 
