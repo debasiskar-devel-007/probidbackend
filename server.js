@@ -178,6 +178,22 @@ app.get('/listdealers', function (req, resp) {
     });
 
 });
+app.post('/usercheck',function(req,resp){
+    var collection=db.collection('dealers');
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+
+    collection.find({username:req.body.username,password:hash}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
 
 app.get('/getusastates',function (req,resp) {
 
