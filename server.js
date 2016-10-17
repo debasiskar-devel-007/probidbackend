@@ -79,6 +79,7 @@ app.post('/uploads', function(req, res) {
 
 var mongodb = require('mongodb');
 var db;
+//var url = 'mongodb://localhost:27017/probidbackend';
 var url = 'mongodb://localhost:27017/probidbackend';
 
 var MongoClient = mongodb.MongoClient;
@@ -154,6 +155,107 @@ app.post('/updatedealer',function (req,resp) {
     });
 
 });
+
+app.post('/addadmin', function (req, resp) {
+
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+        var added_on=new Date();
+    if(req.body.is_active==true){
+       var is_active=1;
+    }
+    else {
+        var is_active=0;
+    }
+
+    value1 = {username:req.body.username,password:hash,fname: req.body.fname,lname: req.body.lname,email:req.body.email,address:req.body.address,city:req.body.city,state:req.body.state,zip:req.body.zip, phone: req.body.phone,is_active:req.body.is_active,added_on:added_on};
+
+    var collection = db.collection('admin');
+
+    collection.insert([value1], function (err, result) {
+        if (err) {
+            resp.send(err);
+        } else {
+            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+        }
+    });
+
+});
+app.get('/adminlist', function (req, resp) {
+
+
+    var collection = db.collection('admin');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+    });
+
+});
+app.post('/deleteadmin', function (req, resp) {
+
+
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+
+    var collection = db.collection('admin');
+    collection.deleteOne({_id: o_id}, function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            //   db.close();
+        }
+    });
+
+
+
+});
+
+app.post('/adminstatuschange',function (req,resp) {
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+
+    var collection = db.collection('admin');
+    collection.update({_id: o_id}, {$set: {is_active: req.body.is_active}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            // db.close();
+
+        }
+    });
+
+
+});
+app.post('/admincheck',function(req,resp){
+    var collection=db.collection('admin');
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+
+    collection.find({username:req.body.username,password:hash}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
+
+//let link = this.serverUrl+'adminlist';
 
 app.get('/listexpert', function (req, resp) {
 
