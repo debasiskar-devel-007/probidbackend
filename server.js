@@ -79,6 +79,7 @@ app.post('/uploads', function(req, res) {
 
 var mongodb = require('mongodb');
 var db;
+//var url = 'mongodb://localhost:27017/probidbackend';
 var url = 'mongodb://localhost:27017/probidbackend';
 
 var MongoClient = mongodb.MongoClient;
@@ -155,6 +156,189 @@ app.post('/updatedealer',function (req,resp) {
 
 });
 
+app.post('/addadmin', function (req, resp) {
+
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+        var added_on=new Date();
+    if(req.body.is_active==true){
+       var is_active=1;
+    }
+    else {
+        var is_active=0;
+    }
+
+    value1 = {username:req.body.username,password:hash,fname: req.body.fname,lname: req.body.lname,email:req.body.email,address:req.body.address,city:req.body.city,state:req.body.state,zip:req.body.zip, phone: req.body.phone,is_active:req.body.is_active,added_on:added_on};
+
+    var collection = db.collection('admin');
+
+    collection.insert([value1], function (err, result) {
+        if (err) {
+            resp.send(err);
+        } else {
+            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+        }
+    });
+
+});
+
+
+
+app.post('/updateadmin',function (req,resp) {
+
+    var is_active=0;
+    if(req.body.is_active==true){
+        var is_active=1;
+    }
+    else {
+        var is_active=0;
+    }
+
+    var collection = db.collection('admin');
+    collection.update({username: req.body.username}, {$set: {address:req.body.fname,state:req.body.state,city:req.body.city,fname:req.body.fname,lname:req.body.lname,phone:req.body.phone,zip:req.body.zip,is_active:is_active}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            //db.close();
+
+        }
+    });
+
+});
+
+
+
+app.post('/editadmin',function(req,resp){
+    var collection=db.collection('admin');
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+    collection.find({_id: o_id}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //resp.send(JSON.stringify(req.body.id));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
+app.get('/adminlist', function (req, resp) {
+
+
+    var collection = db.collection('admin');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+    });
+
+});
+app.post('/deleteadmin', function (req, resp) {
+
+
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+
+    var collection = db.collection('admin');
+    collection.deleteOne({_id: o_id}, function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            //   db.close();
+        }
+    });
+
+
+
+});
+
+app.post('/adminstatuschange',function (req,resp) {
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+
+    var collection = db.collection('admin');
+    collection.update({_id: o_id}, {$set: {is_active: req.body.is_active}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            // db.close();
+
+        }
+    });
+
+
+});
+app.post('/admincheck',function(req,resp){
+    var collection=db.collection('admin');
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+
+    collection.find({username:req.body.username,password:hash}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
+
+app.post('/addcustomer', function (req, resp) {
+
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+
+    value1 = {fname: req.body.fname,lname: req.body.fname, phone: req.body.phone,zip: req.body.zip,username:req.body.username,password:hash,is_lead:1};
+
+    var collection = db.collection('customer');
+
+    collection.insert([value1], function (err, result) {
+        if (err) {
+            resp.send(err);
+        } else {
+            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+        }
+    });
+
+});
+
+app.post('/updatecustomer',function (req,resp) {
+
+    var collection = db.collection('customer');
+    collection.update({username: req.body.username}, {$set: {address:req.body.address,state:req.body.state,city:req.body.city,fname:req.body.fname,lname:req.body.lname,phone:req.body.phone,zip:req.body.zip}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            //db.close();
+
+        }
+    });
+
+});
+//let link = this.serverUrl+'adminlist';
+
 app.get('/listexpert', function (req, resp) {
 
 
@@ -178,6 +362,22 @@ app.get('/listdealers', function (req, resp) {
     });
 
 });
+app.post('/usercheck',function(req,resp){
+    var collection=db.collection('dealers');
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+
+    collection.find({username:req.body.username,password:hash}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
 
 app.get('/getusastates',function (req,resp) {
 
