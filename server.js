@@ -164,7 +164,7 @@ app.post('/addadmin', function (req, resp) {
     var hash = crypto.createHmac('sha256', secret)
         .update('password')
         .digest('hex');
-        var added_on=new Date();
+        var added_on=Date.now();
     if(req.body.is_active==true){
        var is_active=1;
     }
@@ -243,7 +243,7 @@ app.post('/deleteadmin', function (req, resp) {
 
 
 
-    var o_id = new mongodb.ObjectID(req.body.id);
+    var o_id = new mongodb.ObjectID(req.body._id);
 
     var collection = db.collection('admin');
     collection.deleteOne({_id: o_id}, function(err, results) {
