@@ -187,6 +187,31 @@ app.post('/addadmin', function (req, resp) {
 
 });
 
+app.post('/addfaq', function (req, resp) {
+
+    var added_on=Date.now();
+    if(req.body.is_active==true){
+       var is_active=1;
+    }
+    else {
+        var is_active=0;
+    }
+
+    value1 = {title:req.body.title,priority:req.body.priority,addedby: req.body.addedby,addedusertype: req.body.addedusertype,body:req.body.body,is_active:req.body.is_active,added_on:added_on};
+
+    var collection = db.collection('faqs');
+
+    collection.insert([value1], function (err, result) {
+        if (err) {
+            resp.send(err);
+        } else {
+            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+        }
+    });
+
+});
+
 
 
 app.post('/updateadmin',function (req,resp) {
@@ -239,6 +264,22 @@ app.get('/adminlist', function (req, resp) {
     });
 
 });
+
+app.get('/faqlist', function (req, resp) {
+
+
+    var collection = db.collection('faqs');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+
+    });
+
+
+
+});
+
 app.post('/deleteadmin', function (req, resp) {
 
 
