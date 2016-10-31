@@ -79,6 +79,7 @@ app.post('/uploads', function(req, res) {
 
 var mongodb = require('mongodb');
 var db;
+//var faqdb;
 //var url = 'mongodb://localhost:27017/probidbackend';
 var url = 'mongodb://localhost:27017/probidbackend';
 
@@ -90,6 +91,7 @@ MongoClient.connect(url, function (err, database) {
 
     }else{
         db=database;
+        //faqdb=database.faqs;
 
     }});
 
@@ -268,15 +270,46 @@ app.get('/adminlist', function (req, resp) {
 app.get('/faqlist', function (req, resp) {
 
 
-    var collection = db.collection('faqs');
+   /* var collection = db.collection('faqs');
 
     collection.find().toArray(function(err, items) {
 
         resp.send(JSON.stringify(items));
 
+    });*/
+
+    //collection('students')
+
+    var collection=db.collection('faqs').aggregate([
+        {
+            $lookup : {
+                from: "admin",
+                localField: "addedby",
+                foreignField: "username",
+                as: "userdetails"
+            }
+        }
+    ]);
+
+    collection.toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+
     });
 
+    /*//resp.send(JSON.stringify(collection));
+    var arr=new Array();
 
+    console.log(collection.length+"<br/>");
+    collection.forEach(function(coll) {
+        //console.log("Found a coll" + JSON.stringify(coll));
+        arr.push(coll);
+        console.log(arr.length+"<br/>");
+    });
+
+    console.log(arr.length+"<br/>");
+    //resp.send(JSON.stringify(arr));
+*/
 
 });
 
@@ -382,7 +415,7 @@ app.post('/updatecustomer',function (req,resp) {
 
 app.get('/listexpert', function (req, resp) {
 
-
+    console.log('00---00');
     var collection = db.collection('addexpertarea');
 
     collection.find().toArray(function(err, items) {
@@ -673,6 +706,6 @@ var server = app.listen(port, function () {
     var host = server.address().address
     var port = server.address().port
 
-    //  console.log("Example app listening at http://%s:%s", host, port)
+      console.log("Example app listening at http://%s:%s", host, port)
 
 })
