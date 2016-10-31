@@ -192,6 +192,7 @@ app.post('/addadmin', function (req, resp) {
 app.post('/addfaq', function (req, resp) {
 
     var added_on=Date.now();
+    var is_active=0;
     if(req.body.is_active==true){
        var is_active=1;
     }
@@ -241,6 +242,57 @@ app.post('/updateadmin',function (req,resp) {
 
 });
 
+app.get('/updatefaqstatus',function (req,resp) {
+
+
+    var o_id = new mongodb.ObjectID(req.param('id'));
+    var collection = db.collection('faqs');
+    collection.update({_id: o_id}, {$set: {is_active:req.param('value')}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            var collection=db.collection('faqs').aggregate([
+                {
+                    $lookup : {
+                        from: "admin",
+                        localField: "addedby",
+                        foreignField: "username",
+                        as: "userdetails"
+                    }
+                }
+            ]);
+
+            collection.toArray(function(err, items) {
+
+                resp.send(JSON.stringify(items));
+
+            });
+            //db.close();
+
+        }
+    });
+
+});
+app.post('/updatefaqs',function (req,resp) {
+
+
+    var o_id = new mongodb.ObjectID(req.body._id);
+    var collection = db.collection('faqs');
+    collection.update({_id: o_id}, {$set: {title:req.body.title,priority:req.body.priority,body:req.body.body,is_active:req.body.is_active}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+
+        }
+    });
+
+});
+
 
 
 app.post('/editadmin',function(req,resp){
@@ -255,10 +307,36 @@ app.post('/editadmin',function(req,resp){
         ///dbresults.push(items);
     });
 })
+
+app.post('/getfaqdetailsbyid',function(req,resp){
+    var collection=db.collection('faqs');
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+    collection.find({_id: o_id}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //resp.send(JSON.stringify(req.body.id));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
+
+
 app.get('/adminlist', function (req, resp) {
 
 
     var collection = db.collection('admin');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+    });
+
+});
+app.get('/dealerlist', function (req, resp) {
+
+
+    var collection = db.collection('dealers');
 
     collection.find().toArray(function(err, items) {
 
@@ -281,6 +359,10 @@ app.get('/faqlist', function (req, resp) {
     //collection('students')
 
     var collection=db.collection('faqs').aggregate([
+        { "$match": {
+            "addedusertype": { "$in":["admin",]},
+
+        }},
         {
             $lookup : {
                 from: "admin",
@@ -288,7 +370,66 @@ app.get('/faqlist', function (req, resp) {
                 foreignField: "username",
                 as: "userdetails"
             }
+
+        },/*{
+            $lookup : {
+                from: "dealers",
+                localField: "addedby",
+                foreignField: "username",
+                as: "dealerdetails"
+            }
+        }*/
+
+    ]);
+
+    collection.toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+
+    });
+
+    /*//resp.send(JSON.stringify(collection));
+    var arr=new Array();
+
+    console.log(collection.length+"<br/>");
+    collection.forEach(function(coll) {
+        //console.log("Found a coll" + JSON.stringify(coll));
+        arr.push(coll);
+        console.log(arr.length+"<br/>");
+    });
+
+    console.log(arr.length+"<br/>");
+    //resp.send(JSON.stringify(arr));
+*/
+
+});
+app.get('/dealerfaqlist', function (req, resp) {
+
+
+   /* var collection = db.collection('faqs');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+
+    });*/
+
+    //collection('students')
+
+    var collection=db.collection('faqs').aggregate([
+        { "$match": {
+            "addedusertype": { "$in":["dealer",]},
+
+        }},
+        {
+            $lookup : {
+                from: "dealers",
+                localField: "addedby",
+                foreignField: "username",
+                as: "dealerdetails"
+            }
         }
+
     ]);
 
     collection.toArray(function(err, items) {
@@ -313,6 +454,9 @@ app.get('/faqlist', function (req, resp) {
 
 });
 
+
+
+
 app.post('/deleteadmin', function (req, resp) {
 
 
@@ -320,6 +464,28 @@ app.post('/deleteadmin', function (req, resp) {
     var o_id = new mongodb.ObjectID(req.body._id);
 
     var collection = db.collection('admin');
+    collection.deleteOne({_id: o_id}, function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            //   db.close();
+        }
+    });
+
+
+
+});
+
+app.post('/deletefaq', function (req, resp) {
+
+
+
+    var o_id = new mongodb.ObjectID(req.body._id);
+
+    var collection = db.collection('faqs');
     collection.deleteOne({_id: o_id}, function(err, results) {
         if (err){
             resp.send("failed");
@@ -438,6 +604,22 @@ app.get('/listdealers', function (req, resp) {
 });
 app.post('/usercheck',function(req,resp){
     var collection=db.collection('dealers');
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+
+    collection.find({username:req.body.username,password:hash}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
+app.post('/customercheck',function(req,resp){
+    var collection=db.collection('customer');
     var crypto = require('crypto');
 
     var secret = req.body.password;
