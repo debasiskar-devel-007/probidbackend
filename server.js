@@ -244,32 +244,64 @@ app.post('/updateadmin',function (req,resp) {
 
 app.get('/updatefaqstatus',function (req,resp) {
 
+    console.log((req.params));
+    console.log((req.query));
+    //resp.send((req.params));
+    //return;
 
     var o_id = new mongodb.ObjectID(req.param('id'));
     var collection = db.collection('faqs');
-    collection.update({_id: o_id}, {$set: {is_active:req.param('value')}},function(err, results) {
+    collection.update({_id: o_id}, {$set: {is_active:req.query.value}},function(err, results) {
         if (err){
             resp.send("failed");
             throw err;
         }
         else {
+            resp.send("success");
+            /*if(req.query.type=='dealer' && req.query.is_system==1){
+
+                var match={
+                    "addedusertype": { "$in":["admin",]},
+                    "is_active": { "$in":['1']}
+                };
+                var from ='admin';
+            }
+
+            if(req.query.type=='dealer' && req.query.is_system==0){
+
+                var match={
+                    "addedusertype": { "$in":["admin",]},
+                    "is_active": { "$in":['1']}
+                };
+                var from ='dealers';
+            }
+            if(req.query.type=='admin'){
+
+                var match={
+                    "addedusertype": { "$in":["admin",]},
+                };
+                var from ='admin';
+            }
             var collection=db.collection('faqs').aggregate([
+                //{ "$match": match},
                 {
                     $lookup : {
-                        from: "admin",
+                        from: from,
                         localField: "addedby",
                         foreignField: "username",
                         as: "userdetails"
                     }
+
                 }
             ]);
 
             collection.toArray(function(err, items) {
 
+                //console.log(JSON.stringify(items));
                 resp.send(JSON.stringify(items));
 
             });
-            //db.close();
+            //db.close();*/
 
         }
     });
@@ -348,15 +380,7 @@ app.get('/dealerlist', function (req, resp) {
 app.get('/faqlist', function (req, resp) {
 
 
-   /* var collection = db.collection('faqs');
 
-    collection.find().toArray(function(err, items) {
-
-        resp.send(JSON.stringify(items));
-
-    });*/
-
-    //collection('students')
 
     var collection=db.collection('faqs').aggregate([
         { "$match": {
@@ -371,14 +395,7 @@ app.get('/faqlist', function (req, resp) {
                 as: "userdetails"
             }
 
-        },/*{
-            $lookup : {
-                from: "dealers",
-                localField: "addedby",
-                foreignField: "username",
-                as: "dealerdetails"
-            }
-        }*/
+        }
 
     ]);
 
@@ -403,24 +420,77 @@ app.get('/faqlist', function (req, resp) {
 */
 
 });
-app.get('/dealerfaqlist', function (req, resp) {
+
+app.get('/systemfaqlist', function (req, resp) {
 
 
-   /* var collection = db.collection('faqs');
 
-    collection.find().toArray(function(err, items) {
-
-        resp.send(JSON.stringify(items));
-
-    });*/
-
-    //collection('students')
 
     var collection=db.collection('faqs').aggregate([
         { "$match": {
-            "addedusertype": { "$in":["dealer",]},
+            "addedusertype": { "$in":["admin",]},
+            "is_active": { "$in":['1']}
 
         }},
+        {
+            $lookup : {
+                from: "admin",
+                localField: "addedby",
+                foreignField: "username",
+                as: "userdetails"
+            }
+
+        }
+
+    ]);
+
+
+    collection.toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //resp.send((items.length));
+
+    });
+
+    /*//resp.send(JSON.stringify(collection));
+    var arr=new Array();
+
+    console.log(collection.length+"<br/>");
+    collection.forEach(function(coll) {
+        //console.log("Found a coll" + JSON.stringify(coll));
+        arr.push(coll);
+        console.log(arr.length+"<br/>");
+    });
+
+    console.log(arr.length+"<br/>");
+    //resp.send(JSON.stringify(arr));
+*/
+
+});
+
+
+app.get('/dealerfaqlist', function (req, resp) {
+
+
+
+    //collection('students')
+    if(typeof (req.param('dealerid')!='customer')){
+        var match={
+            "addedusertype": { "$in":["dealer",]},
+            "addedby": { "$in":[req.param('dealerid'),]},
+
+        }
+    }
+    if(typeof (req.param('dealerid')=='customer')){
+        var match={
+            "addedusertype": { "$in":["dealer",]},
+            //"addedby": { "$in":[req.param('dealerid'),]},
+
+        }
+    }
+
+    var collection=db.collection('faqs').aggregate([
+        { "$match":match },
         {
             $lookup : {
                 from: "dealers",
