@@ -8,7 +8,7 @@ var port = process.env.PORT || 8001;
 
 
 var http = require('http').Server(app);
-
+var request = require('request');
 
 
 
@@ -133,7 +133,15 @@ app.post('/adddealer', function (req, resp) {
         if (err) {
             resp.send(err);
         } else {
-            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+            // resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+            request('http://influxiq.com/projects/domainmanager/createsubdomain.php?subdomain='+req.body.username, function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    var result={status:body};
+                    resp.send(JSON.stringify(result));
+                    console.log(body) // Show the HTML for the Google homepage.
+                }
+            })
 
         }
     });
