@@ -13,7 +13,8 @@
     "mongoose": "^3.7.1",
     "multer": "1.1.0",
     "nodemailer": "0.7.1",
-    "crypto": "latest"
+    "crypto": "latest",
+    "request": "latest"
   },
   "devDependencies": {
     "express": "^4.13.3",

@@ -23,7 +23,7 @@ var datetimestamp='';
 var filename='';
 var storage = multer.diskStorage({ //multers disk storage settings
     destination: function (req, file, cb) {
-        cb(null, '/');
+        cb(null, './uploadedfiles/sharelinks/');
     },
     filename: function (req, file, cb) {
 
