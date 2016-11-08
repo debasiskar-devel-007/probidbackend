@@ -23,7 +23,7 @@ var datetimestamp='';
 var filename='';
 var storage = multer.diskStorage({ //multers disk storage settings
     destination: function (req, file, cb) {
-        cb(null, './uploads/');
+        cb(null, './uploadedfiles/sharelinks/');
     },
     filename: function (req, file, cb) {
 
@@ -71,9 +71,12 @@ app.post('/uploads', function(req, res) {
             res.json({error_code:1,err_desc:err});
             return;
         }
+        var item =new Object();
 
+        item.error_code=0;
+        item.filename=filename;
 
-        res.json({error_code:0,filename:filename});
+        res.send(filename);
     });
 });
 
@@ -124,8 +127,12 @@ app.post('/adddealer', function (req, resp) {
     var hash = crypto.createHmac('sha256', secret)
         .update('password')
         .digest('hex');
+    var added_on=Date.now();
 
-    value1 = {fname: req.body.fname,lname: req.body.fname, phone: req.body.phone,zip: req.body.zip,username:req.body.username,password:hash,is_lead:1};
+        var is_active=1;
+
+
+    value1 = {fname: req.body.fname,lname: req.body.fname, phone: req.body.phone,zip: req.body.zip,username:req.body.username,password:hash,email:req.body.email,is_lead:1,is_active:is_active,added_on:added_on};
 
     var collection = db.collection('dealers');
 
@@ -148,6 +155,18 @@ app.post('/adddealer', function (req, resp) {
 
 });
 
+
+app.post('/dealerautologin',function(req,resp){
+    var collection=db.collection('dealers');
+
+
+    collection.find({username:req.body.username}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
 
 app.post('/updatedealer',function (req,resp) {
 
@@ -211,6 +230,31 @@ app.post('/addfaq', function (req, resp) {
     value1 = {title:req.body.title,priority:req.body.priority,addedby: req.body.addedby,addedusertype: req.body.addedusertype,body:req.body.body,is_active:req.body.is_active,added_on:added_on};
 
     var collection = db.collection('faqs');
+
+    collection.insert([value1], function (err, result) {
+        if (err) {
+            resp.send(err);
+        } else {
+            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+        }
+    });
+
+});
+app.post('/addsharemedia', function (req, resp) {
+
+    var added_on=Date.now();
+    var is_public=0;
+    if(req.body.is_public==true){
+       var is_public=1;
+    }
+    else {
+        var is_public=0;
+    }
+
+    value1 = {name:req.body.name,description:req.body.description,url:req.body.url,filename:req.body.filename,priority:req.body.priority,is_public:is_public,added_on:added_on};
+
+    var collection = db.collection('sharemedia');
 
     collection.insert([value1], function (err, result) {
         if (err) {
@@ -332,6 +376,31 @@ app.post('/updatefaqs',function (req,resp) {
     });
 
 });
+app.post('/updatesharemedia',function (req,resp) {
+
+    var is_public=0;
+    if(req.body.is_public==true){
+        var is_public=1;
+    }
+    else {
+        var is_public=0;
+    }
+
+
+    var o_id = new mongodb.ObjectID(req.body._id);
+    var collection = db.collection('sharemedia');
+    collection.update({_id: o_id}, {$set: {name:req.body.name,description:req.body.description,url:req.body.url,filename:req.body.filename,priority:req.body.priority,is_public:is_public}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+
+        }
+    });
+
+});
 
 
 
@@ -347,6 +416,19 @@ app.post('/editadmin',function(req,resp){
         ///dbresults.push(items);
     });
 })
+app.post('/editsharemedia',function(req,resp){
+    var collection=db.collection('sharemedia');
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+    collection.find({_id: o_id}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //resp.send(JSON.stringify(req.body.id));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
+
 
 app.post('/getfaqdetailsbyid',function(req,resp){
     var collection=db.collection('faqs');
@@ -377,6 +459,17 @@ app.get('/dealerlist', function (req, resp) {
 
 
     var collection = db.collection('dealers');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+    });
+
+});
+app.get('/sharemedialist', function (req, resp) {
+
+
+    var collection = db.collection('sharemedia');
 
     collection.find().toArray(function(err, items) {
 
@@ -556,6 +649,36 @@ app.post('/deleteadmin', function (req, resp) {
 
 
 });
+app.post('/deletedealer', function (req, resp) {
+
+
+
+    var o_id = new mongodb.ObjectID(req.body._id);
+
+    var collection = db.collection('dealers');
+    collection.deleteOne({_id: o_id}, function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            request('http://influxiq.com/projects/domainmanager/deletesubdomain.php?subdomain='+req.body.username, function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    var result={status:body};
+                    //resp.send(JSON.stringify(result));
+                    console.log(body) // Show the HTML for the Google homepage.
+                }
+            })
+            resp.send("success");
+            //   db.close();
+        }
+    });
+
+
+
+});
+
+
 
 app.post('/deletefaq', function (req, resp) {
 
@@ -578,12 +701,50 @@ app.post('/deletefaq', function (req, resp) {
 
 
 });
+app.post('/deletesharemedia', function (req, resp) {
+    var o_id = new mongodb.ObjectID(req.body._id);
+
+    var collection = db.collection('sharemedia');
+    collection.deleteOne({_id: o_id}, function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            //   db.close();
+        }
+    });
+
+
+
+});
+
 
 app.post('/adminstatuschange',function (req,resp) {
 
     var o_id = new mongodb.ObjectID(req.body.id);
 
     var collection = db.collection('admin');
+    collection.update({_id: o_id}, {$set: {is_active: req.body.is_active}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            // db.close();
+
+        }
+    });
+
+
+});
+app.post('/dealerstatuschange',function (req,resp) {
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+
+    var collection = db.collection('dealers');
     collection.update({_id: o_id}, {$set: {is_active: req.body.is_active}},function(err, results) {
         if (err){
             resp.send("failed");
@@ -712,6 +873,17 @@ app.post('/customercheck',function(req,resp){
         ///dbresults.push(items);
     });
 })
+app.post('/dealercheck',function(req,resp){
+    var collection=db.collection('dealers');
+
+    collection.find({username:req.body.username}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
+
 
 app.get('/getusastates',function (req,resp) {
 
