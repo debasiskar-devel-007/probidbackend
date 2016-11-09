@@ -266,6 +266,47 @@ app.post('/addsharemedia', function (req, resp) {
     });
 
 });
+app.post('/addbannersize', function (req, resp) {
+
+    value1 = {sizename:req.body.sizename,height:req.body.height,width:req.body.width};
+
+    var collection = db.collection('bannersize');
+
+    collection.insert([value1], function (err, result) {
+        if (err) {
+            resp.send(err);
+        } else {
+            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+        }
+    });
+
+});
+app.post('/addbanner', function (req, resp) {
+    var added_on=Date.now();
+    var is_active=0;
+    if(req.body.is_active==true){
+        var is_active=1;
+    }
+    else {
+        var is_active=0;
+    }
+
+
+    value1 = {bannername:req.body.bannername,bannersize:req.body.bannersize,sharelink:req.body.sharelink,filename:req.body.filename,priority:req.body.priority,is_active:is_active,added_on:added_on};
+
+    var collection = db.collection('banner');
+
+    collection.insert([value1], function (err, result) {
+        if (err) {
+            resp.send(err);
+        } else {
+            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+        }
+    });
+
+});
 
 
 
@@ -401,6 +442,45 @@ app.post('/updatesharemedia',function (req,resp) {
     });
 
 });
+app.post('/updatebannersize',function (req,resp) {
+    var o_id = new mongodb.ObjectID(req.body._id);
+    var collection = db.collection('bannersize');
+    collection.update({_id: o_id}, {$set: {sizename:req.body.sizename,height:req.body.height,width:req.body.width}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+
+        }
+    });
+
+});
+app.post('/updatebanner',function (req,resp) {
+    var is_active=0;
+    if(req.body.is_active==true){
+        var is_active=1;
+    }
+    else {
+        var is_active=0;
+    }
+
+
+    var o_id = new mongodb.ObjectID(req.body._id);
+    var collection = db.collection('banner');
+    collection.update({_id: o_id}, {$set: {bannername:req.body.bannername,bannersize:req.body.bannersize,sharelink:req.body.sharelink,filename:req.body.filename,priority:req.body.priority,is_active:is_active}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+
+        }
+    });
+
+});
 
 
 
@@ -418,6 +498,30 @@ app.post('/editadmin',function(req,resp){
 })
 app.post('/editsharemedia',function(req,resp){
     var collection=db.collection('sharemedia');
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+    collection.find({_id: o_id}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //resp.send(JSON.stringify(req.body.id));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
+app.post('/editbanner',function(req,resp){
+    var collection=db.collection('banner');
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+    collection.find({_id: o_id}).toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+        //resp.send(JSON.stringify(req.body.id));
+        //db.close();
+        ///dbresults.push(items);
+    });
+})
+app.post('/editbannersize',function(req,resp){
+    var collection=db.collection('bannersize');
 
     var o_id = new mongodb.ObjectID(req.body.id);
     collection.find({_id: o_id}).toArray(function(err, items) {
@@ -474,6 +578,58 @@ app.get('/sharemedialist', function (req, resp) {
     collection.find().toArray(function(err, items) {
 
         resp.send(JSON.stringify(items));
+    });
+
+});
+app.get('/getbannersizelist', function (req, resp) {
+
+
+    var collection = db.collection('bannersize');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+    });
+
+});
+app.get('/bannerlist', function (req, resp) {
+
+
+    /*var collection = db.collection('banner');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+    });*/
+
+
+    var collection=db.collection('banner').aggregate([
+
+        {
+            $lookup : {
+                from: "sharemedia",
+                localField: "sharemedia",
+                foreignField: "mongoose.Types.ObjectId(_id)",
+                as: "sharelinkdetails"
+            }
+
+        },
+        {
+            $lookup : {
+                from: "bannersize",
+                localField: "sizename",
+                foreignField: "mongoose.Types.ObjectId(_id)",
+                as: "bannersizedetails1"
+            }
+
+        }
+
+    ]);
+
+    collection.toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+
     });
 
 });
@@ -719,6 +875,42 @@ app.post('/deletesharemedia', function (req, resp) {
 
 
 });
+app.post('/deletebannersize', function (req, resp) {
+    var o_id = new mongodb.ObjectID(req.body._id);
+
+    var collection = db.collection('bannersize');
+    collection.deleteOne({_id: o_id}, function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            //   db.close();
+        }
+    });
+
+
+
+});
+app.post('/deletebanner', function (req, resp) {
+    var o_id = new mongodb.ObjectID(req.body._id);
+
+    var collection = db.collection('banner');
+    collection.deleteOne({_id: o_id}, function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        } 
+        else {
+            resp.send("success");
+            //   db.close();
+        }
+    });
+
+
+
+});
 
 
 app.post('/adminstatuschange',function (req,resp) {
@@ -759,6 +951,26 @@ app.post('/dealerstatuschange',function (req,resp) {
 
 
 });
+app.post('/bannerstatuschange',function (req,resp) {
+
+    var o_id = new mongodb.ObjectID(req.body.id);
+
+    var collection = db.collection('banner');
+    collection.update({_id: o_id}, {$set: {is_active: req.body.is_active}},function(err, results) {
+        if (err){
+            resp.send("failed");
+            throw err;
+        }
+        else {
+            resp.send("success");
+            // db.close();
+
+        }
+    });
+
+
+});
+
 app.post('/admincheck',function(req,resp){
     var collection=db.collection('admin');
     var crypto = require('crypto');
