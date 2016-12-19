@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="allan_schuman">
+  <component name="PublishConfigData" autoUpload="Always" serverName="probidbackend">
     <serverData>
       <paths name="allan_schuman">
         <serverdata>
           <mappings>
             <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="probidbackend">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/probidnewbackend" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

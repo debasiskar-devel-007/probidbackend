@@ -129,7 +129,7 @@ app.post('/adddealer', function (req, resp) {
         .digest('hex');
     var added_on=Date.now();
 
-        var is_active=1;
+    var is_active=1;
 
 
     value1 = {fname: req.body.fname,lname: req.body.fname, phone: req.body.phone,zip: req.body.zip,username:req.body.username,password:hash,email:req.body.email,is_lead:1,is_active:is_active,added_on:added_on};
@@ -193,15 +193,15 @@ app.post('/addadmin', function (req, resp) {
     var hash = crypto.createHmac('sha256', secret)
         .update('password')
         .digest('hex');
-        var added_on=Date.now();
+    var added_on=Date.now();
     if(req.body.is_active==true){
-       var is_active=1;
+        var is_active=1;
     }
     else {
         var is_active=0;
     }
 
-    value1 = {username:req.body.username,password:hash,fname: req.body.fname,lname: req.body.lname,email:req.body.email,address:req.body.address,city:req.body.city,state:req.body.state,zip:req.body.zip, phone: req.body.phone,is_active:req.body.is_active,added_on:added_on};
+    value1 = {username:req.body.username,password:hash,fname: req.body.fname,lname: req.body.lname,email:req.body.email,address:req.body.address,city:req.body.city,state:req.body.state,zip:req.body.zip, phone: req.body.phone,is_active:is_active,added_on:added_on};
 
     var collection = db.collection('admin');
 
@@ -215,13 +215,44 @@ app.post('/addadmin', function (req, resp) {
     });
 
 });
+app.post('/addaffiliate', function (req, resp) {
+
+    var crypto = require('crypto');
+
+    var secret = req.body.password;
+    var hash = crypto.createHmac('sha256', secret)
+        .update('password')
+        .digest('hex');
+    var added_on=Date.now();
+    if(req.body.is_active==true){
+        var is_active=1;
+    }
+    else {
+        var is_active=0;
+    }
+
+    value1 = {username:req.body.username,password:hash,dealereusername:req.body.dealereusername,fname: req.body.fname,lname: req.body.lname,email:req.body.email,address:req.body.address,city:req.body.city,state:req.body.state,zip:req.body.zip, phone: req.body.phone,is_active:is_active,added_on:added_on};
+
+    var collection = db.collection('affiliate');
+
+    collection.insert([value1], function (err, result) {
+        if (err) {
+            resp.send(err);
+        } else {
+            resp.send('Inserted %d documents into the "users" collection. The documents inserted with "_id" are:', result.length, result);
+
+        }
+    });
+
+});
+
 
 app.post('/addfaq', function (req, resp) {
 
     var added_on=Date.now();
     var is_active=0;
     if(req.body.is_active==true){
-       var is_active=1;
+        var is_active=1;
     }
     else {
         var is_active=0;
@@ -246,7 +277,7 @@ app.post('/addsharemedia', function (req, resp) {
     var added_on=Date.now();
     var is_public=0;
     if(req.body.is_public==true){
-       var is_public=1;
+        var is_public=1;
     }
     else {
         var is_public=0;
@@ -353,48 +384,48 @@ app.get('/updatefaqstatus',function (req,resp) {
             resp.send("success");
             /*if(req.query.type=='dealer' && req.query.is_system==1){
 
-                var match={
-                    "addedusertype": { "$in":["admin",]},
-                    "is_active": { "$in":['1']}
-                };
-                var from ='admin';
-            }
+             var match={
+             "addedusertype": { "$in":["admin",]},
+             "is_active": { "$in":['1']}
+             };
+             var from ='admin';
+             }
 
-            if(req.query.type=='dealer' && req.query.is_system==0){
+             if(req.query.type=='dealer' && req.query.is_system==0){
 
-                var match={
-                    "addedusertype": { "$in":["admin",]},
-                    "is_active": { "$in":['1']}
-                };
-                var from ='dealers';
-            }
-            if(req.query.type=='admin'){
+             var match={
+             "addedusertype": { "$in":["admin",]},
+             "is_active": { "$in":['1']}
+             };
+             var from ='dealers';
+             }
+             if(req.query.type=='admin'){
 
-                var match={
-                    "addedusertype": { "$in":["admin",]},
-                };
-                var from ='admin';
-            }
-            var collection=db.collection('faqs').aggregate([
-                //{ "$match": match},
-                {
-                    $lookup : {
-                        from: from,
-                        localField: "addedby",
-                        foreignField: "username",
-                        as: "userdetails"
-                    }
+             var match={
+             "addedusertype": { "$in":["admin",]},
+             };
+             var from ='admin';
+             }
+             var collection=db.collection('faqs').aggregate([
+             //{ "$match": match},
+             {
+             $lookup : {
+             from: from,
+             localField: "addedby",
+             foreignField: "username",
+             as: "userdetails"
+             }
 
-                }
-            ]);
+             }
+             ]);
 
-            collection.toArray(function(err, items) {
+             collection.toArray(function(err, items) {
 
-                //console.log(JSON.stringify(items));
-                resp.send(JSON.stringify(items));
+             //console.log(JSON.stringify(items));
+             resp.send(JSON.stringify(items));
 
-            });
-            //db.close();*/
+             });
+             //db.close();*/
 
         }
     });
@@ -570,12 +601,32 @@ app.get('/dealerlist', function (req, resp) {
     });
 
 });
+app.get('/affiliatelist', function (req, resp) {
+
+
+    var collection = db.collection('affiliate');
+
+    collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+    });
+
+});
 app.get('/sharemedialist', function (req, resp) {
 
 
     var collection = db.collection('sharemedia');
 
     collection.find().toArray(function(err, items) {
+
+        resp.send(JSON.stringify(items));
+    });
+
+});
+app.get('/sharemedialistdealer', function (req, resp) {
+    var collection = db.collection('sharemedia');
+
+    collection.find({is_public: 1}).toArray(function(err, items) {
 
         resp.send(JSON.stringify(items));
     });
@@ -597,10 +648,10 @@ app.get('/bannerlist', function (req, resp) {
 
     /*var collection = db.collection('banner');
 
-    collection.find().toArray(function(err, items) {
+     collection.find().toArray(function(err, items) {
 
-        resp.send(JSON.stringify(items));
-    });*/
+     resp.send(JSON.stringify(items));
+     });*/
 
 
     var collection=db.collection('banner').aggregate([
@@ -663,18 +714,18 @@ app.get('/faqlist', function (req, resp) {
     });
 
     /*//resp.send(JSON.stringify(collection));
-    var arr=new Array();
+     var arr=new Array();
 
-    console.log(collection.length+"<br/>");
-    collection.forEach(function(coll) {
-        //console.log("Found a coll" + JSON.stringify(coll));
-        arr.push(coll);
-        console.log(arr.length+"<br/>");
-    });
+     console.log(collection.length+"<br/>");
+     collection.forEach(function(coll) {
+     //console.log("Found a coll" + JSON.stringify(coll));
+     arr.push(coll);
+     console.log(arr.length+"<br/>");
+     });
 
-    console.log(arr.length+"<br/>");
-    //resp.send(JSON.stringify(arr));
-*/
+     console.log(arr.length+"<br/>");
+     //resp.send(JSON.stringify(arr));
+     */
 
 });
 
@@ -710,18 +761,18 @@ app.get('/systemfaqlist', function (req, resp) {
     });
 
     /*//resp.send(JSON.stringify(collection));
-    var arr=new Array();
+     var arr=new Array();
 
-    console.log(collection.length+"<br/>");
-    collection.forEach(function(coll) {
-        //console.log("Found a coll" + JSON.stringify(coll));
-        arr.push(coll);
-        console.log(arr.length+"<br/>");
-    });
+     console.log(collection.length+"<br/>");
+     collection.forEach(function(coll) {
+     //console.log("Found a coll" + JSON.stringify(coll));
+     arr.push(coll);
+     console.log(arr.length+"<br/>");
+     });
 
-    console.log(arr.length+"<br/>");
-    //resp.send(JSON.stringify(arr));
-*/
+     console.log(arr.length+"<br/>");
+     //resp.send(JSON.stringify(arr));
+     */
 
 });
 
@@ -766,18 +817,18 @@ app.get('/dealerfaqlist', function (req, resp) {
     });
 
     /*//resp.send(JSON.stringify(collection));
-    var arr=new Array();
+     var arr=new Array();
 
-    console.log(collection.length+"<br/>");
-    collection.forEach(function(coll) {
-        //console.log("Found a coll" + JSON.stringify(coll));
-        arr.push(coll);
-        console.log(arr.length+"<br/>");
-    });
+     console.log(collection.length+"<br/>");
+     collection.forEach(function(coll) {
+     //console.log("Found a coll" + JSON.stringify(coll));
+     arr.push(coll);
+     console.log(arr.length+"<br/>");
+     });
 
-    console.log(arr.length+"<br/>");
-    //resp.send(JSON.stringify(arr));
-*/
+     console.log(arr.length+"<br/>");
+     //resp.send(JSON.stringify(arr));
+     */
 
 });
 
@@ -901,7 +952,7 @@ app.post('/deletebanner', function (req, resp) {
         if (err){
             resp.send("failed");
             throw err;
-        } 
+        }
         else {
             resp.send("success");
             //   db.close();
@@ -1343,6 +1394,7 @@ app.get('/getusastates',function (req,resp) {
 
 });
 
+*/1 * * * * /home/influx/public_html/projects/projects.sh
 
 
 var server = app.listen(port, function () {
@@ -1350,6 +1402,6 @@ var server = app.listen(port, function () {
     var host = server.address().address
     var port = server.address().port
 
-      console.log("Example app listening at http://%s:%s", host, port)
+    console.log("Example app listening at http://%s:%s", host, port)
 
 })
